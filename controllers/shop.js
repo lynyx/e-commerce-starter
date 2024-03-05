@@ -75,11 +75,19 @@ exports.getOrders = (req, res) => {
 
 exports.getProductDetails = async (req, res) => {
   const { productId } = req.params;
-  const product = await Product.getById(productId);
   
-  res.render('./shop/product-details', {
-    product,
-    pageTitle: product.title,
-    path: '/products',
-  });
+  try {
+    const product = await Product.getById(productId);
+    
+    // console.log(product)
+    
+    res.render('./shop/product-details', {
+      product,
+      pageTitle: product.title,
+      path: '/products',
+    });
+  } catch (e) {
+    console.error('Error while getting product details: ', e.message);
+  }
+  
 };

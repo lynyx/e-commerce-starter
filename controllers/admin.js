@@ -12,8 +12,13 @@ exports.postAddProduct = async (req, res) => {
   const { title, price, description } = req.body;
   const imageUrl = 'https://picsum.photos/200';
   const product = new Product(null, title, price, imageUrl, description);
-  await product.save();
-  res.redirect('/admin/products');
+  
+  try {
+    await product.save();
+    res.redirect('/admin/products');
+  } catch (e) {
+    console.error('Error while saving product to database: ', e.message);
+  }
 };
 
 exports.getProducts = async (req, res) => {
@@ -30,18 +35,23 @@ exports.getEditProduct = async (req, res) => {
   const { isEdit } = req.query;
   const { productId } = req.params;
   
-  const product = await Product.getById(productId);
-  
-  if (!product) {
-    return res.redirect('/');
+  try {
+    const product = await Product.getById(productId);
+    
+    if (!product) {
+      return res.redirect('/');
+    }
+    
+    res.render('./admin/edit-product', {
+      pageTitle: 'Edit Product',
+      path: '/admin/edit-product',
+      isEdit,
+      product,
+    });
+  } catch (err) {
+    console.error('Error in getEditProduct controller:', err.message);
+    res.status(500).send('Server error');
   }
-  
-  res.render('./admin/edit-product', {
-    pageTitle: 'Edit Product',
-    path: '/admin/edit-product',
-    isEdit,
-    product,
-  });
 };
 
 exports.postEditProduct = async (req, res) => {

@@ -1,8 +1,5 @@
-const path = require('node:path');
-const { readFile, writeFile } = require('node:fs/promises');
-
+const db = require('../util/database');
 const Cart = require('./cart');
-const rootDir = require('../util/path');
 
 module.exports = class Product {
   constructor(id, title, price, imageUrl, description) {
@@ -14,61 +11,28 @@ module.exports = class Product {
   }
   
   async save() {
-    const products = await Product._getProducts();
-    const updatedProducts = [...products];
+    await db.execute(
+      'INSERT INTO products (title, price, imageUrl, description) VALUES (?,?,?,?)',
+      [this.title, this.price, this.imageUrl, this.description],
+    );
     
-    if (this.id) {
-      const foundProductIndex = updatedProducts.findIndex(product => product.id === this.id);
-      updatedProducts[foundProductIndex] = this;
-    } else {
-      this.id = Math.random().toString();
-      updatedProducts.push(this);
-    }
-    
-    await Product._writeProductsToFile(updatedProducts);
   }
   
   static async fetchAll() {
-    return await Product._getProducts();
+    const products = await db.execute('SELECT * FROM products');
+    return products[0];
   }
   
   static async getById(id) {
-    const products = await this._getProducts();
-    return products.find(product => product.id === id);
+    try {
+      const productQuery = await db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
+      return productQuery[0][0];
+    } catch (error) {
+      console.error('Error while fetching product by ID:', error.message);
+      throw error; // re-throw the error so it can be caught in the controller
+    }
   }
   
   static async deleteProduct(productId) {
-    const products = await Product._getProducts();
-    
-    const productPrice = products.find(product => product.id === productId)?.price;
-    const updatedProducts = products.filter(product => product.id !== productId);
-    
-    try {
-      await Cart.deleteProduct(productId, productPrice);
-      await Product._writeProductsToFile(updatedProducts);
-    } catch (e) {
-      console.error('Error while Deleting Product: ==>> ', e.message);
-    }
-  }
-  
-  static async _getProducts() {
-    const pathToFile = path.join(rootDir, 'data', 'products.json');
-    
-    try {
-      const data = await readFile(pathToFile);
-      return JSON.parse(data.toString());
-    } catch (e) {
-      return [];
-    }
-  }
-  
-  static async _writeProductsToFile(products) {
-    const pathToFile = path.join(rootDir, 'data', 'products.json');
-    
-    try {
-      await writeFile(pathToFile, JSON.stringify(products, null, 2));
-    } catch (e) {
-      console.error('Error while writing Products to file: ', e.message);
-    }
   }
 }

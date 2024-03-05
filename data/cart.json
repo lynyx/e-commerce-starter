@@ -1,4 +1,8 @@
 {
-  "products": [],
+  "products": [
+    {
+      "qty": 2
+    }
+  ],
   "totalPrice": null
 }
