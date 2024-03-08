@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 
 const sequelize = require('../util/database');
 
-const Cart = sequelize.define('cart', {
+const Order = sequelize.define('order', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -11,4 +11,6 @@ const Cart = sequelize.define('cart', {
   },
 });
 
-module.exports = Cart;
+module.exports = Order;
+
+

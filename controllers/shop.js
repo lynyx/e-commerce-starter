@@ -1,62 +1,111 @@
 const Product = require('../models/product');
 const Cart = require('../models/cart');
 
-
 exports.getIndex = async (req, res) => {
-  const prods = await Product.fetchAll();
+  try {
+    const products = await Product.findAll();
+    
+    res.render('./shop/index', {
+      products,
+      pageTitle: 'Shop',
+      path: '/',
+    });
+  } catch (e) {
+    console.error('Error while getting products on index page:', e.message);
+  }
   
-  res.render('./shop/index', {
-    prods,
-    pageTitle: 'Shop',
-    path: '/',
-  });
 };
 
 exports.getProducts = async (req, res) => {
-  const prods = await Product.fetchAll();
+  try {
+    const products = await Product.findAll();
+    
+    res.render('./shop/products-list', {
+      products,
+      pageTitle: 'All Products',
+      path: '/products',
+    });
+  } catch (e) {
+    console.error('Error while getting products on products page:', e.message);
+  }
+};
+
+exports.getProductDetails = async (req, res) => {
+  const { productId } = req.params;
   
-  res.render('./shop/products-list', {
-    prods,
-    pageTitle: 'All Products',
-    path: '/products',
-  });
+  try {
+    const product = await Product.findByPk(productId);
+    
+    res.render('./shop/product-details', {
+      product,
+      pageTitle: product.title,
+      path: '/products',
+    });
+  } catch (e) {
+    console.error('Error while getting product details: ', e.message);
+  }
 };
 
 exports.getCart = async (req, res) => {
-  const cart = await Cart.fetchAll();
-  const products = await Product.fetchAll();
-  
-  const cartProducts = [];
-  
-  for (let productData of products) {
-    const cartProductData = cart.products.find(it => it.id === productData.id);
+  try {
+    const cart = await req.user.getCart();
+    const products = await cart.getProducts();
     
-    if (cartProductData) {
-      cartProducts.push({ productData, qty: cartProductData.qty });
-    }
+    res.render('./shop/cart', {
+      pageTitle: 'Your Cart',
+      path: '/cart',
+      products,
+    });
+  } catch (e) {
+    console.error('Error while getting Cart or Products in a Cart: ', e.message);
   }
-  
-  res.render('./shop/cart', {
-    pageTitle: 'Your Cart',
-    path: '/cart',
-    products: cartProducts,
-  });
 };
 
 exports.postAddToCart = async (req, res) => {
   const { productId } = req.body;
-  const { id, price } = await Product.getById(productId);
   
-  await Cart.addProduct(id, price);
+  try {
+    const cart = await req.user.getCart();
+    const [existingProduct] = await cart.getProducts({ where: { id: productId } });
+    // console.log('existingProduct', existingProduct);
+    let quantity = 1;
+    
+    if (existingProduct) {
+      // Increase quantity
+      quantity = existingProduct.cartItem.quantity + 1;
+      await cart.addProduct(existingProduct, {
+        through: {
+          quantity,
+        }
+      });
+    } else {
+      // Add new Product to the cart.
+      const product = await Product.findByPk(productId);
+      await cart.addProduct(product, {
+        through: {
+          quantity,
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Error:', e.message);
+  }
+  
   res.redirect('/products');
 };
 
 exports.postDeleteProductFromCart = async (req, res) => {
   const { productId } = req.body;
-  const { price } = Product.getById(productId);
   
-  await Cart.deleteProduct(productId, price);
-  res.redirect('/cart');
+  try {
+    const cart = await req.user.getCart();
+    const [product] = await cart.getProducts({ where: { id: productId } });
+    await product.cartItem.destroy();
+    
+    res.redirect('/cart');
+  } catch (e) {
+    console.error('Error while deleting Product from a Cart: ', e.message);
+  }
 };
 
 exports.getCheckout = (req, res) => {
@@ -66,28 +115,37 @@ exports.getCheckout = (req, res) => {
   });
 };
 
-exports.getOrders = (req, res) => {
-  res.render('./shop/orders', {
-    pageTitle: 'Your Orders',
-    path: '/orders',
-  });
-};
-
-exports.getProductDetails = async (req, res) => {
-  const { productId } = req.params;
-  
+exports.getOrders = async (req, res) => {
   try {
-    const product = await Product.getById(productId);
+    const orders = await req.user.getOrders({ include: ['products'] });
+    console.log(orders)
     
-    // console.log(product)
-    
-    res.render('./shop/product-details', {
-      product,
-      pageTitle: product.title,
-      path: '/products',
+    res.render('./shop/orders', {
+      pageTitle: 'Your Orders',
+      path: '/orders',
+      orders,
     });
   } catch (e) {
-    console.error('Error while getting product details: ', e.message);
+    console.error('Error:', e.message);
+  }
+};
+
+exports.postCreateOrder = async (req, res) => {
+  try {
+    const cart = await req.user.getCart();
+    const products = await cart.getProducts();
+    
+    const order = await req.user.createOrder();
+    await order.addProducts(products.map(product => {
+      product.orderItem = { quantity: product.cartItem.quantity }
+      return product;
+    }));
+    
+    await cart.setProducts(null);
+    
+    res.redirect('/orders');
+  } catch (e) {
+    console.error('Error:', e.message);
   }
   
 };

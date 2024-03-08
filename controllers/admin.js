@@ -10,36 +10,53 @@ exports.getAddProduct = (req, res) => {
 
 exports.postAddProduct = async (req, res) => {
   const { title, price, description } = req.body;
-  const imageUrl = 'https://picsum.photos/200';
-  const product = new Product(null, title, price, imageUrl, description);
+  
+  const resolution = Math.floor(Math.random() * 8 + 3) * 100;
+  
+  const imageUrl = `https://picsum.photos/${resolution}`;
   
   try {
-    await product.save();
+    await req.user.createProduct({ // "Magic" function created by Sequelize after setting up DB tables relations in app.js
+      title,
+      price,
+      imageUrl,
+      description,
+      userId: req.user.id,
+    });
     res.redirect('/admin/products');
   } catch (e) {
-    console.error('Error while saving product to database: ', e.message);
+    console.error('Error while adding product to database: ', e.message);
   }
 };
 
 exports.getProducts = async (req, res) => {
-  const prods = await Product.fetchAll();
+  try {
+    const products = await Product.findAll();
+    
+    res.render('./admin/products-list', {
+      products,
+      pageTitle: 'Admin Products',
+      path: '/admin/products',
+    });
+  } catch (e) {
+    console.error('Error while getting products on admin products list:', e.message);
+  }
   
-  res.render('./admin/products-list', {
-    prods,
-    pageTitle: 'Admin Products',
-    path: '/admin/products',
-  });
 };
 
 exports.getEditProduct = async (req, res) => {
   const { isEdit } = req.query;
   const { productId } = req.params;
   
+  if (!isEdit) {
+    res.redirect('/admin/products');
+  }
+  
   try {
-    const product = await Product.getById(productId);
+    const product = await Product.findByPk(productId);
     
     if (!product) {
-      return res.redirect('/');
+      return res.redirect('/admin/products');
     }
     
     res.render('./admin/edit-product', {
@@ -56,16 +73,37 @@ exports.getEditProduct = async (req, res) => {
 
 exports.postEditProduct = async (req, res) => {
   const { productId, title, imageUrl, price, description } = req.body;
-  const product = new Product(productId, title, price, imageUrl, description);
   
-  await product.save();
-  
-  res.redirect('/admin/products');
+  try {
+    const product = await Product.findByPk(productId);
+    Object.assign(product, { title, price, description });
+    await product.save();
+    res.redirect('/admin/products');
+  } catch (e) {
+    console.error('Error while updating product: ', e.message);
+  }
 };
 
 exports.postDeleteProduct = async (req, res) => {
   const { productId } = req.body;
-  await Product.deleteProduct(productId);
   
-  res.redirect('/admin/products');
+  try {
+    // Removing product record from the table
+    // await Product.destroy({ where: { id: productId } });
+    // or
+    
+    // const product = await Product.findByPk(productId);
+    const products = await req.user.getProducts({ // Only User who created a product can remove it.
+      where: {
+        id: productId,
+      }
+    });
+    await products[0].destroy();
+    
+    res.redirect('/admin/products');
+    
+  } catch (e) {
+    console.error(`Error while deleting product: `, e.message);
+  }
+  
 };

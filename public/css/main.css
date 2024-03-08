@@ -23,6 +23,12 @@ form {
   text-align: center;
 }
 
+.image img {
+  height: 500px;
+  max-width: 500px; /* Limit the width of the image */
+  max-height: 500px; /* Limit the height of the image */
+}
+
 .main-header {
   width: 100%;
   height: 3.5rem;
@@ -162,7 +168,7 @@ form {
 }
 
 .card__image {
-  width: 100%;
+  width: 20rem;
 }
 
 .card__image img {
