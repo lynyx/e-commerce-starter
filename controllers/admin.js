@@ -9,20 +9,11 @@ exports.getAddProduct = (req, res) => {
 };
 
 exports.postAddProduct = async (req, res) => {
-  const { title, price, description } = req.body;
-  
-  const resolution = Math.floor(Math.random() * 8 + 3) * 100;
-  
-  const imageUrl = `https://picsum.photos/${resolution}`;
+  const { title, price, imageUrl, description } = req.body;
   
   try {
-    await req.user.createProduct({ // "Magic" function created by Sequelize after setting up DB tables relations in app.js
-      title,
-      price,
-      imageUrl,
-      description,
-      userId: req.user.id,
-    });
+    const prod = new Product(title, price, imageUrl, description, null, req.user._id);
+    await prod.save();
     res.redirect('/admin/products');
   } catch (e) {
     console.error('Error while adding product to database: ', e.message);
@@ -31,7 +22,7 @@ exports.postAddProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.findAll();
+    const products = await Product.fetchAll();
     
     res.render('./admin/products-list', {
       products,
@@ -53,7 +44,7 @@ exports.getEditProduct = async (req, res) => {
   }
   
   try {
-    const product = await Product.findByPk(productId);
+    const product = await Product.findById(productId);
     
     if (!product) {
       return res.redirect('/admin/products');
@@ -72,12 +63,12 @@ exports.getEditProduct = async (req, res) => {
 };
 
 exports.postEditProduct = async (req, res) => {
-  const { productId, title, imageUrl, price, description } = req.body;
+  const { title, imageUrl, price, description, productId } = req.body;
   
   try {
-    const product = await Product.findByPk(productId);
-    Object.assign(product, { title, price, description });
+    const product = new Product(title, price, imageUrl, description, productId);
     await product.save();
+    
     res.redirect('/admin/products');
   } catch (e) {
     console.error('Error while updating product: ', e.message);
@@ -88,22 +79,10 @@ exports.postDeleteProduct = async (req, res) => {
   const { productId } = req.body;
   
   try {
-    // Removing product record from the table
-    // await Product.destroy({ where: { id: productId } });
-    // or
-    
-    // const product = await Product.findByPk(productId);
-    const products = await req.user.getProducts({ // Only User who created a product can remove it.
-      where: {
-        id: productId,
-      }
-    });
-    await products[0].destroy();
-    
-    res.redirect('/admin/products');
-    
+    await Product.deleteById(productId);
   } catch (e) {
     console.error(`Error while deleting product: `, e.message);
+  } finally {
+    res.redirect('/admin/products');
   }
-  
 };

@@ -1,25 +1,22 @@
 {
-  "name": "nodejs-complete-guide",
-  "version": "1.0.0",
-  "description": "Complete Node.js Guide",
+  "name": "e-commerce-app",
+  "version": "0.0.1",
+  "description": "E-commerce app",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js",
     "start-server": "node app.js"
   },
-  "author": "Maximilian Schwarzmüller",
+  "author": "Kanstantsin Laurenka",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^1.18.3"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
-    "ejs": "^2.6.1",
+    "ejs": "^3.1.9",
     "express": "^4.16.3",
-    "express-handlebars": "^3.0.0",
-    "mysql2": "^3.9.2",
-    "pug": "^2.0.3",
-    "sequelize": "^6.37.1"
+    "mongodb": "^6.5.0"
   }
 }

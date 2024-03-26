@@ -29,7 +29,7 @@
             </div>
 
             <% if (isEdit) { %>
-                <input type="hidden" name="productId" value="<%= product.id %>">
+                <input type="hidden" name="productId" value="<%= product._id %>">
             <% } %>
 
             <button class="btn" type="submit"><%= isEdit ? 'Update' : 'Add' %> Product</button>

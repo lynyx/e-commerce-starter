@@ -1,9 +1,8 @@
 const Product = require('../models/product');
-const Cart = require('../models/cart');
 
 exports.getIndex = async (req, res) => {
   try {
-    const products = await Product.findAll();
+    const products = await Product.fetchAll();
     
     res.render('./shop/index', {
       products,
@@ -13,12 +12,11 @@ exports.getIndex = async (req, res) => {
   } catch (e) {
     console.error('Error while getting products on index page:', e.message);
   }
-  
 };
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.findAll();
+    const products = await Product.fetchAll();
     
     res.render('./shop/products-list', {
       products,
@@ -34,7 +32,7 @@ exports.getProductDetails = async (req, res) => {
   const { productId } = req.params;
   
   try {
-    const product = await Product.findByPk(productId);
+    const product = await Product.findById(productId);
     
     res.render('./shop/product-details', {
       product,
@@ -48,8 +46,7 @@ exports.getProductDetails = async (req, res) => {
 
 exports.getCart = async (req, res) => {
   try {
-    const cart = await req.user.getCart();
-    const products = await cart.getProducts();
+    const products = await req.user.getCart();
     
     res.render('./shop/cart', {
       pageTitle: 'Your Cart',
@@ -65,43 +62,24 @@ exports.postAddToCart = async (req, res) => {
   const { productId } = req.body;
   
   try {
-    const cart = await req.user.getCart();
-    const [existingProduct] = await cart.getProducts({ where: { id: productId } });
-    // console.log('existingProduct', existingProduct);
-    let quantity = 1;
-    
-    if (existingProduct) {
-      // Increase quantity
-      quantity = existingProduct.cartItem.quantity + 1;
-      await cart.addProduct(existingProduct, {
-        through: {
-          quantity,
-        }
-      });
-    } else {
-      // Add new Product to the cart.
-      const product = await Product.findByPk(productId);
-      await cart.addProduct(product, {
-        through: {
-          quantity,
-        }
-      });
-    }
+    const product = await Product.findById(productId);
+    await req.user.addToCart(product);
+    res.redirect('/products');
   } catch (e) {
-    console.error('Error:', e.message);
+    console.error('Error while adding product to a cart:', e.message);
+    if (e.message === 'Product not found') {
+      res.status(404).send('Product not found!');
+    } else {
+      res.status(500).send('An error occurred while adding the product to the cart.');
+    }
   }
-  
-  res.redirect('/products');
 };
 
 exports.postDeleteProductFromCart = async (req, res) => {
   const { productId } = req.body;
   
   try {
-    const cart = await req.user.getCart();
-    const [product] = await cart.getProducts({ where: { id: productId } });
-    await product.cartItem.destroy();
-    
+    await req.user.deleteCartItem(productId);
     res.redirect('/cart');
   } catch (e) {
     console.error('Error while deleting Product from a Cart: ', e.message);
@@ -117,8 +95,7 @@ exports.getCheckout = (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const orders = await req.user.getOrders({ include: ['products'] });
-    console.log(orders)
+    const orders = await req.user.getOrders();
     
     res.render('./shop/orders', {
       pageTitle: 'Your Orders',
@@ -132,18 +109,9 @@ exports.getOrders = async (req, res) => {
 
 exports.postCreateOrder = async (req, res) => {
   try {
-    const cart = await req.user.getCart();
-    const products = await cart.getProducts();
+    await req.user.createOrder();
     
-    const order = await req.user.createOrder();
-    await order.addProducts(products.map(product => {
-      product.orderItem = { quantity: product.cartItem.quantity }
-      return product;
-    }));
-    
-    await cart.setProducts(null);
-    
-    res.redirect('/orders');
+    res.redirect('/cart');
   } catch (e) {
     console.error('Error:', e.message);
   }

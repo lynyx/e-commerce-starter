@@ -3,4 +3,4 @@ exports.pageNotFound = (req, res, next) => {
     pageTitle: 'Page Not Found',
     path: '/404',
   });
-}
+};

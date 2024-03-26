@@ -203,6 +203,32 @@ form {
   color: white;
 }
 
+.danger {
+  border: 1px solid #AD0000;
+  color: #AD0000;
+}
+
+.danger:hover {
+  background-color: #AD0000;
+  color: white;
+}
+
+.mt-5 {
+  margin-top: 5px;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mt-50 {
+  margin-top: 50px;
+}
+
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;

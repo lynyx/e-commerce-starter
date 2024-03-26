@@ -15,13 +15,13 @@ const {
 const router = express.Router();
 
 router.get('/', getIndex);
-router.get('/products/:productId', getProductDetails);
-router.post('/add-to-cart', postAddToCart);
 router.get('/products', getProducts);
+router.get('/products/:productId', getProductDetails);
 router.get('/cart', getCart);
+router.post('/add-to-cart', postAddToCart);
 router.post('/cart-delete-item', postDeleteProductFromCart);
 router.post('/create-order', postCreateOrder)
 router.get('/orders', getOrders);
-router.get('/checkout', getCheckout);
+// router.get('/checkout', getCheckout);
 
 module.exports = router;
