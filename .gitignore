@@ -4,3 +4,4 @@ node_modules
 .idea
 public/.DS_Store
 views/.DS_Store
+environments/*.env
