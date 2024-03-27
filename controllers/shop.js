@@ -1,8 +1,9 @@
 const Product = require('../models/product');
+const Order = require('../models/order');
 
 exports.getIndex = async (req, res) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find();
     
     res.render('./shop/index', {
       products,
@@ -16,7 +17,7 @@ exports.getIndex = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find();
     
     res.render('./shop/products-list', {
       products,
@@ -46,7 +47,17 @@ exports.getProductDetails = async (req, res) => {
 
 exports.getCart = async (req, res) => {
   try {
-    const products = await req.user.getCart();
+    const user = await req.user.populate('cart.items.productId');
+    const products = user.cart.items.filter(item => item.productId);
+    
+    // Remove products that are not found in the database
+    const absentProductsIds = user.cart.items
+      .filter(item => !item.productId)
+      .map(product => product._id);
+    
+    if (absentProductsIds.length) {
+      await Promise.all(absentProductsIds.map(productId => req.user.deleteCartItem(productId)));
+    }
     
     res.render('./shop/cart', {
       pageTitle: 'Your Cart',
@@ -95,7 +106,7 @@ exports.getCheckout = (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const orders = await req.user.getOrders();
+    const orders = await Order.find({ 'user.userId': req.user._id });
     
     res.render('./shop/orders', {
       pageTitle: 'Your Orders',
@@ -109,11 +120,26 @@ exports.getOrders = async (req, res) => {
 
 exports.postCreateOrder = async (req, res) => {
   try {
-    await req.user.createOrder();
+    const user = await req.user.populate('cart.items.productId');
+    const products = user.cart.items.map(item => ({ product: item.productId, quantity: item.quantity }));
+    const totalPrice = products.reduce((total, item) => total + item.product.price * item.quantity, 0);
+    
+    const order = new Order({
+      products,
+      totalPrice,
+      user: {
+        userId: user,
+        name: user.name,
+        email: user.email,
+      },
+    });
+    
+    await order.save();
+    await user.clearCart();
     
     res.redirect('/cart');
   } catch (e) {
-    console.error('Error:', e.message);
+    console.error('Error while posting an Order:', e);
+    res.status(500).send('An error occurred while creating the order.');
   }
-  
 };

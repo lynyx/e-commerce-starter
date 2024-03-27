@@ -1,4 +1,8 @@
-# Project Name
+## !!! NOTE THAT THIS PROJECT UNDER ACTIVE DEVELOPMENT! ANY FEATURES CAN BE CHANGED OR REMOVED !!!
+
+If you have any questions or suggestions, please feel free to contact me by email in github profile.
+
+# E-commerce starter app
 
 This is a template for a Node.js E-commerce project that uses Express.js and MongoDB. It includes a basic project
 structure and configuration for environment variables.

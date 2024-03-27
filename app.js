@@ -1,10 +1,11 @@
+require('dotenv').config({ path: `./environments/${process.env.NODE_ENV}.env` });
 const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const { pageNotFound } = require('./controllers/404');
-const { mongoConnect, client } = require('./util/database');
 const User = require('./models/user');
 
 
@@ -23,8 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 let testUserId;
 app.use(async (req, res, next) => {
   try {
-    const { name, email, cart, _id } = await User.findById('65fd9375a1c5c14a4bbb2010');
-    req.user = new User(name, email, cart, _id);
+    req.user = await User.findById('6602e636b9cc0406eaa91746');
     next();
   } catch (e) {
     console.error('Error while getting a user:', e.message);
@@ -38,7 +38,14 @@ app.use(pageNotFound);
 
 const initializeApp = async () => {
   try {
-    await mongoConnect();
+    await mongoose.connect(process.env.MONGODB_URI);
+    const user = await User.findOne();
+    
+    if (!user) {
+      const user = new User({ name: 'Kos', email: 'email@test.com', cart: { items: [] } });
+      await user.save();
+    }
+    
     app.listen(3000);
   } catch (e) {
     console.error('Error while initializing app:', e.message);
