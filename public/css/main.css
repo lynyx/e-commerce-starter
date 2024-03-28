@@ -23,10 +23,12 @@ form {
   text-align: center;
 }
 
+.image {
+  height: 20rem;
+}
+
 .image img {
-  height: 500px;
-  max-width: 500px; /* Limit the width of the image */
-  max-height: 500px; /* Limit the height of the image */
+  height: 100%;
 }
 
 .main-header {
@@ -40,8 +42,10 @@ form {
 
 .main-header__nav {
   height: 100%;
-  display: none;
+  width: 100%;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .main-header__item-list {
@@ -56,14 +60,21 @@ form {
   padding: 0;
 }
 
-.main-header__item a {
+.main-header__item a,
+.main-header__item button {
+  font: inherit;
+  background: transparent;
+  border: none;
   text-decoration: none;
   color: white;
+  cursor: pointer;
 }
 
 .main-header__item a:hover,
 .main-header__item a:active,
-.main-header__item a.active {
+.main-header__item a.active,
+.main-header__item button:hover,
+.main-header__item button:active {
   color: #ffeb3b;
 }
 
@@ -168,7 +179,7 @@ form {
 }
 
 .card__image {
-  width: 20rem;
+  width: 100%;
 }
 
 .card__image img {
@@ -203,13 +214,14 @@ form {
   color: white;
 }
 
-.danger {
-  border: 1px solid #AD0000;
-  color: #AD0000;
+.btn.danger {
+  color: red;
+  border-color: red;
 }
 
-.danger:hover {
-  background-color: #AD0000;
+.btn.danger:hover,
+.btn.danger:active {
+  background: red;
   color: white;
 }
 

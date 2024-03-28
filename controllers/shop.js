@@ -9,6 +9,7 @@ exports.getIndex = async (req, res) => {
       products,
       pageTitle: 'Shop',
       path: '/',
+      isAuthenticated: req.session.user,
     });
   } catch (e) {
     console.error('Error while getting products on index page:', e.message);
@@ -23,6 +24,7 @@ exports.getProducts = async (req, res) => {
       products,
       pageTitle: 'All Products',
       path: '/products',
+      isAuthenticated: req.session.user,
     });
   } catch (e) {
     console.error('Error while getting products on products page:', e.message);
@@ -39,6 +41,7 @@ exports.getProductDetails = async (req, res) => {
       product,
       pageTitle: product.title,
       path: '/products',
+      isAuthenticated: req.session.user,
     });
   } catch (e) {
     console.error('Error while getting product details: ', e.message);
@@ -63,6 +66,7 @@ exports.getCart = async (req, res) => {
       pageTitle: 'Your Cart',
       path: '/cart',
       products,
+      isAuthenticated: req.session.user,
     });
   } catch (e) {
     console.error('Error while getting Cart or Products in a Cart: ', e.message);
@@ -101,6 +105,7 @@ exports.getCheckout = (req, res) => {
   res.render('./shop/checkout', {
     pageTitle: 'Checkout',
     path: '/checkout',
+    isAuthenticated: req.session.user,
   });
 };
 
@@ -112,6 +117,7 @@ exports.getOrders = async (req, res) => {
       pageTitle: 'Your Orders',
       path: '/orders',
       orders,
+      isAuthenticated: req.session.user,
     });
   } catch (e) {
     console.error('Error:', e.message);
