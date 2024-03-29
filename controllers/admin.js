@@ -5,7 +5,6 @@ exports.getAddProduct = (req, res) => {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     isEdit: false,
-    isAuthenticated: req.session.user,
   });
 };
 
@@ -41,7 +40,6 @@ exports.getProducts = async (req, res) => {
       products,
       pageTitle: 'Admin Products',
       path: '/admin/products',
-      isAuthenticated: req.session.user,
     });
   } catch (e) {
     console.error('Error while getting products on admin products list:', e.message);
@@ -69,7 +67,6 @@ exports.getEditProduct = async (req, res) => {
       path: '/admin/edit-product',
       isEdit,
       product,
-      isAuthenticated: req.session.user,
     });
   } catch (err) {
     console.error('Error in getEditProduct controller:', err.message);

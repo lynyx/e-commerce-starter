@@ -31,7 +31,7 @@
             <% if (isEdit) { %>
                 <input type="hidden" name="productId" value="<%= product._id %>">
             <% } %>
-
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
             <button class="btn" type="submit"><%= isEdit ? 'Update' : 'Add' %> Product</button>
         </form>
     </main>
