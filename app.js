@@ -5,25 +5,31 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
-const csrf = require('csurf'); // Deprecated package, need to be replaced.
+const MongoStore = require('connect-mongo');
+const cookieParser = require("cookie-parser");
+const { doubleCsrf } = require('csrf-csrf');
 const flash = require('connect-flash');
 
 const { pageNotFound } = require('./controllers/404');
 const User = require('./models/user');
+const csrfOptions = require("./configs/csrf-csrf");
 
 
+// Initializations
 const app = express();
-// Disable 'X-Powered-By' header
-app.disable('x-powered-by');
+app.disable('x-powered-by'); // Disable 'X-Powered-By' header
 
-const csrfProtection = csrf();
+const { doubleCsrfProtection } = doubleCsrf(csrfOptions);
 
-const store = new MongoDBStore({
-  uri: process.env.MONGODB_URI,
-  collection: 'sessions',
-  // expires: 1000 * 60 * 60, // Expires in 1 hour
-})
+const store = MongoStore.create({
+  mongoUrl: process.env.MONGODB_URI,
+  dbName: 'shop',
+  collectionName: 'sessions',
+  stringify: false,
+  ttl: 60 * 60 * 24, // 1 day
+  autoRemove: 'interval',
+  autoRemoveInterval: 10, // 10 minutes
+});
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -35,14 +41,15 @@ const authRoutes = require('./routes/auth');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-  secret: 'Should be very long string here for a production',
-  name: 'sessc',
+  secret: process.env.SESSION_SECRET,
+  name: process.env.NODE_ENV === 'production' ? '__Host-psifi.x-session' : 'psifi.x-session',
   resave: false,
   saveUninitialized: false,
   store,
   // cookie: { maxAge: 1000 * 3600 }, // If Not specified - it's treated as a Session cookie.
 }));
-app.use(csrfProtection);
+app.use(cookieParser(process.env.COOKIE_SECRET));
+app.use(doubleCsrfProtection);
 app.use(flash());
 
 app.use(async (req, res, next) => {
