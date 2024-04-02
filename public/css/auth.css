@@ -4,3 +4,8 @@
   margin: auto;
   display: block;
 }
+
+.reset-password--link {
+  text-decoration: none;
+  color: #00695c;
+}

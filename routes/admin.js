@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { requireAuth } = require('../middlewares/auth');
+const { requireAuth, requireAdminPermissions } = require('../middlewares/auth');
 
 const {
   getAddProduct,
@@ -7,16 +7,16 @@ const {
   getEditProduct,
   getProducts,
   postEditProduct,
-  postDeleteProduct
+  postDeleteProduct,
 } = require('../controllers/admin');
 
 const router = Router();
 
-router.get('/add-product', requireAuth, getAddProduct);
-router.post('/add-product', requireAuth, postAddProduct);
-router.get('/products', requireAuth, getProducts);
-router.get('/edit-product/:productId', requireAuth, getEditProduct);
-router.post('/edit-product', requireAuth, postEditProduct);
-router.post('/delete-product', requireAuth, postDeleteProduct);
+router.get('/add-product', requireAuth, requireAdminPermissions, getAddProduct);
+router.post('/add-product', requireAuth, requireAdminPermissions, postAddProduct);
+router.get('/products', requireAuth, requireAdminPermissions, getProducts);
+router.get('/edit-product/:productId', requireAuth, requireAdminPermissions, getEditProduct);
+router.post('/edit-product', requireAuth, requireAdminPermissions, postEditProduct);
+router.post('/delete-product', requireAuth, requireAdminPermissions, postDeleteProduct);
 
 module.exports = router;

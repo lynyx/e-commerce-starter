@@ -1,6 +1,6 @@
 const Product = require("../models/product");
 
-exports.getAddProduct = (req, res) => {
+exports.getAddProduct = async (req, res) => {
   res.render('./admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
@@ -34,6 +34,7 @@ exports.postAddProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
+    // const products = await Product.find({ userId: req.user._id }); // Find products created by current the user.
     const products = await Product.find();
     
     res.render('./admin/products-list', {

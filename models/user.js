@@ -9,10 +9,17 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  isAdmin: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
   password: {
     type: String,
     required: true,
   },
+  resetToken: String,
+  resetTokenExpiration: Date,
   cart: {
     items: [{
       productId: {
