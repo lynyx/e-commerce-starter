@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser");
 const { doubleCsrf } = require('csrf-csrf');
 const flash = require('connect-flash');
 
-const { pageNotFound } = require('./controllers/404');
+const { pageNotFound, serverError } = require('./controllers/errors');
 const User = require('./models/user');
 const csrfOptions = require("./configs/csrf-csrf");
 
@@ -37,6 +37,7 @@ app.set('views', 'views');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
+const handleError = require("./util/handeError");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -64,17 +65,30 @@ app.use(async (req, res, next) => {
     try {
       req.user = await User.findById(req.session.user._id);
     } catch (e) {
-      console.error('Error while setting req.user:', e.message);
+      handleError(e, next, 'Error while setting req.user:');
     }
   }
-  
   next();
 });
 
 app.use(authRoutes);
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.get('/500', serverError);
 app.use(pageNotFound);
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  // if (err.httpStatusCode === '403')
+  // Or
+  // res.status(err.httpStatusCode).render(...);
+  console.error(err);
+  res.status(err.httpStatusCode).render('500', {
+    pageTitle: 'Error occurred!',
+    path: '/500',
+    isAuthenticated: req.session.user,
+  });
+})
 
 
 const initializeApp = async () => {

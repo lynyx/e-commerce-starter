@@ -259,9 +259,9 @@ form {
 }
 
 .user-message--error {
-  border: 1px solid #670000;
-  background: #ff2e2e;
-  color: #700000;
+  border: 1px solid #c50000;
+  background: #ff9191;
+  color: #c50000;
 }
 
 @media (min-width: 768px) {

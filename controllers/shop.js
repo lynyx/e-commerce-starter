@@ -1,51 +1,52 @@
 const Product = require('../models/product');
 const Order = require('../models/order');
+const handleError = require("../util/handeError");
 
-exports.getIndex = async (req, res) => {
+exports.getIndex = async (req, res, next) => {
   try {
     const products = await Product.find();
     
-    res.render('./shop/index', {
+    res.render('shop/index', {
       products,
       pageTitle: 'Shop',
       path: '/',
     });
   } catch (e) {
-    console.error('Error while getting products on index page:', e.message);
+    handleError(e, next, 'Error while getting products on index page:');
   }
 };
 
-exports.getProducts = async (req, res) => {
+exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();
     
-    res.render('./shop/products-list', {
+    res.render('shop/products-list', {
       products,
       pageTitle: 'All Products',
       path: '/products',
     });
   } catch (e) {
-    console.error('Error while getting products on products page:', e.message);
+    handleError(e, next, 'Error while getting products on products page:');
   }
 };
 
-exports.getProductDetails = async (req, res) => {
+exports.getProductDetails = async (req, res, next) => {
   const { productId } = req.params;
   
   try {
     const product = await Product.findById(productId);
     
-    res.render('./shop/product-details', {
+    res.render('shop/product-details', {
       product,
       pageTitle: product.title,
       path: '/products',
     });
   } catch (e) {
-    console.error('Error while getting product details: ', e.message);
+    handleError(e, next, 'Error while getting product details:');
   }
 };
 
-exports.getCart = async (req, res) => {
+exports.getCart = async (req, res, next) => {
   try {
     const user = await req.user.populate('cart.items.productId');
     const products = user.cart.items.filter(item => item.productId);
@@ -59,17 +60,17 @@ exports.getCart = async (req, res) => {
       await Promise.all(absentProductsIds.map(productId => req.user.deleteCartItem(productId)));
     }
     
-    res.render('./shop/cart', {
+    res.render('shop/cart', {
       pageTitle: 'Your Cart',
       path: '/cart',
       products,
     });
   } catch (e) {
-    console.error('Error while getting Cart or Products in a Cart: ', e.message);
+    handleError(e, next, 'Error while getting Cart or Products in a Cart:');
   }
 };
 
-exports.postAddToCart = async (req, res) => {
+exports.postAddToCart = async (req, res, next) => {
   const { productId } = req.body;
   
   try {
@@ -77,48 +78,43 @@ exports.postAddToCart = async (req, res) => {
     await req.user.addToCart(product);
     res.redirect('/products');
   } catch (e) {
-    console.error('Error while adding product to a cart:', e.message);
-    if (e.message === 'Product not found') {
-      res.status(404).send('Product not found!');
-    } else {
-      res.status(500).send('An error occurred while adding the product to the cart.');
-    }
+    handleError(e, next, 'Error while adding product to a cart:');
   }
 };
 
-exports.postDeleteProductFromCart = async (req, res) => {
+exports.postDeleteProductFromCart = async (req, res, next) => {
   const { productId } = req.body;
   
   try {
     await req.user.deleteCartItem(productId);
     res.redirect('/cart');
   } catch (e) {
-    console.error('Error while deleting Product from a Cart: ', e.message);
+    handleError(e, next, 'Error while deleting Product from a Cart:');
   }
 };
 
 exports.getCheckout = (req, res) => {
-  res.render('./shop/checkout', {
+  res.render('shop/checkout', {
     pageTitle: 'Checkout',
     path: '/checkout',
   });
 };
 
-exports.getOrders = async (req, res) => {
+exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ 'user.userId': req.user._id });
     
-    res.render('./shop/orders', {
+    res.render('shop/orders', {
       pageTitle: 'Your Orders',
       path: '/orders',
       orders,
     });
   } catch (e) {
-    console.error('Error:', e.message);
+    handleError(e, next, 'Error while getting orders:');
   }
 };
 
-exports.postCreateOrder = async (req, res) => {
+exports.postCreateOrder = async (req, res, next) => {
   try {
     const user = await req.user.populate('cart.items.productId');
     const products = user.cart.items.map(item => ({ product: item.productId, quantity: item.quantity }));
@@ -138,7 +134,6 @@ exports.postCreateOrder = async (req, res) => {
     
     res.redirect('/cart');
   } catch (e) {
-    console.error('Error while posting an Order:', e);
-    res.status(500).send('An error occurred while creating the order.');
+    handleError(e, next, 'Error while posting an Order:');
   }
 };
