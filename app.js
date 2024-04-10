@@ -9,10 +9,12 @@ const MongoStore = require('connect-mongo');
 const cookieParser = require("cookie-parser");
 const { doubleCsrf } = require('csrf-csrf');
 const flash = require('connect-flash');
+const multer = require('multer');
 
 const { pageNotFound, serverError } = require('./controllers/errors');
 const User = require('./models/user');
 const csrfOptions = require("./configs/csrf-csrf");
+const handleError = require("./util/handleError");
 
 
 // Initializations
@@ -31,16 +33,29 @@ const store = MongoStore.create({
   autoRemoveInterval: 10, // 10 minutes
 });
 
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'images'),
+  filename: (req, file, cb) => {
+    cb(null, `${new Date().toISOString()}-${file.originalname}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  return ['image/png', 'image/jpg', 'image/jpeg']
+    .includes(file.mimetype) ? cb(null, true) : cb(null, false);
+}
+
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
-const handleError = require("./util/handeError");
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(multer({ storage: fileStorage, fileFilter }).single('image'))
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(session({
   secret: process.env.SESSION_SECRET,
   name: process.env.NODE_ENV === 'production' ? '__Host-psifi.x-session' : 'psifi.x-session',

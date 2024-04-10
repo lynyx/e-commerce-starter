@@ -11,6 +11,7 @@ const {
   postAddToCart,
   postCreateOrder,
   postDeleteProductFromCart,
+  getInvoice,
 } = require('../controllers/shop');
 
 const router = Router();
@@ -23,6 +24,7 @@ router.post('/add-to-cart', requireAuth, postAddToCart);
 router.post('/cart-delete-item', requireAuth, postDeleteProductFromCart);
 router.post('/create-order', requireAuth, postCreateOrder)
 router.get('/orders', requireAuth, getOrders);
+router.get('/orders/:orderId', requireAuth, getInvoice);
 // router.get('/checkout', getCheckout);
 
 module.exports = router;

@@ -21,7 +21,6 @@ router.post(
   requireAdminPermissions,
   [
     body('title').isLength({ min: 3 }).trim().withMessage('Title must be at least 3 characters long'),
-    body('imageUrl').trim().isURL().withMessage('Invalid URL'),
     body('price').isFloat().withMessage('Price must be a number'),
     body('description').isLength({
       min: 5,
@@ -38,7 +37,6 @@ router.post(
   requireAdminPermissions,
   [
     body('title').isLength({ min: 3 }).trim().withMessage('Title must be at least 3 characters long'),
-    body('imageUrl').trim().isURL().withMessage('Invalid URL'),
     body('price').isFloat().withMessage('Price must be a number'),
     body('description').isLength({
       min: 5,

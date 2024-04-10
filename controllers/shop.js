@@ -1,6 +1,11 @@
+// const fs = require('node:fs');
+// const path = require('node:path');
+const PDFDocument = require('pdfkit');
+
 const Product = require('../models/product');
 const Order = require('../models/order');
-const handleError = require("../util/handeError");
+const handleError = require("../util/handleError");
+// const rootDir = require('../util/path');
 
 exports.getIndex = async (req, res, next) => {
   try {
@@ -137,3 +142,58 @@ exports.postCreateOrder = async (req, res, next) => {
     handleError(e, next, 'Error while posting an Order:');
   }
 };
+
+exports.getInvoice = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      return handleError(new Error('Order not found'), next, 'Error while getting an Invoice:');
+    }
+    
+    if (!order.user.userId.equals(req.user._id)) {
+      return handleError(new Error('Unauthorized'), next, 'Error while getting an Invoice:', 403);
+    }
+    
+    const fileName = `invoice-${orderId}.pdf`;
+    // const filePath = path.join(rootDir, 'data', 'invoices', fileName);
+    
+    res.setHeader('Content-Type', 'Application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    
+    const doc = new PDFDocument();
+    
+    // doc.pipe(fs.createWriteStream(filePath));
+    doc.pipe(res);
+    
+    doc.fontSize(24).text('Invoice', {
+      bold: true,
+    });
+    
+    doc.lineWidth(2) // make the line bolder
+      .moveTo(50, 100) // set the current point
+      .lineTo(550, 100) // draw a line to another point
+      .stroke(); // stroke the path
+    
+    doc.moveDown(); // add some space between the line and the text
+    
+    let total = 0;
+    order.products.forEach(({ product: { title, price }, quantity }) => {
+      total += price * quantity;
+      doc.fontSize(14).text(`${title} - ${quantity} x $${price}`);
+    });
+    
+    doc.lineWidth(2) // make the line bolder
+      .moveTo(60, 165) // set the current point
+      .lineTo(260, 165) // draw a line to another point
+      .stroke(); // stroke the path
+    
+    doc.moveDown(); // add some space between the line and the text
+    doc.fontSize(20).text(`Total: $${total}`);
+    
+    doc.end();
+  } catch (e) {
+    handleError(e, next, 'Error while getting an Invoice:');
+  }
+}

@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 
 const User = require('../models/user');
-const handleError = require("../util/handeError");
+const handleError = require("../util/handleError");
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
