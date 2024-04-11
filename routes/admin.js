@@ -9,7 +9,7 @@ const {
   getEditProduct,
   getProducts,
   postEditProduct,
-  postDeleteProduct,
+  deleteProduct,
 } = require('../controllers/admin');
 
 const router = Router();
@@ -45,6 +45,6 @@ router.post(
   ],
   postEditProduct
 );
-router.post('/delete-product', requireAuth, requireAdminPermissions, postDeleteProduct);
+router.delete('/product/:productId', requireAuth, requireAdminPermissions, deleteProduct);
 
 module.exports = router;

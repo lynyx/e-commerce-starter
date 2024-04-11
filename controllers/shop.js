@@ -7,14 +7,26 @@ const Order = require('../models/order');
 const handleError = require("../util/handleError");
 // const rootDir = require('../util/path');
 
+const ITEMS_PER_PAGE = 2;
+
 exports.getIndex = async (req, res, next) => {
   try {
-    const products = await Product.find();
+    const page = +req.query.page || 1;
+    const totalItems = await Product.countDocuments();
+    
+    const products = await Product.find().skip((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE);
     
     res.render('shop/index', {
       products,
       pageTitle: 'Shop',
       path: '/',
+      totalItems,
+      currentPage: page,
+      hasNextPage: page * ITEMS_PER_PAGE < totalItems,
+      nextPage: page + 1,
+      hasPrevPage: (page - 1) > 0,
+      prevPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
     });
   } catch (e) {
     handleError(e, next, 'Error while getting products on index page:');
@@ -23,12 +35,22 @@ exports.getIndex = async (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find();
+    const page = +req.query.page || 1;
+    const totalItems = await Product.countDocuments();
+    
+    const products = await Product.find().skip((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE);
     
     res.render('shop/products-list', {
       products,
       pageTitle: 'All Products',
       path: '/products',
+      totalItems,
+      currentPage: page,
+      hasNextPage: page * ITEMS_PER_PAGE < totalItems,
+      nextPage: page + 1,
+      hasPrevPage: (page - 1) > 0,
+      prevPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
     });
   } catch (e) {
     handleError(e, next, 'Error while getting products on products page:');

@@ -165,7 +165,7 @@ form {
 .grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: center;
   align-items: stretch;
 }
 
@@ -262,6 +262,28 @@ form {
   border: 1px solid #c50000;
   background: #ff9191;
   color: #c50000;
+}
+
+.pagination {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.pagination a {
+  display: inline-block;
+  margin: 0 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #00695c;
+  color: #00695c;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+.pagination a.active,
+.pagination a:active,
+.pagination a:hover {
+  background: #00695c;
+  color: white;
 }
 
 @media (min-width: 768px) {

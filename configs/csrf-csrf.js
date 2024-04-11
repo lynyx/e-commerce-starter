@@ -8,6 +8,6 @@ module.exports = {
     signed: true,
   },
   getTokenFromRequest: (req) => {
-    return req.body._csrf;
+    return req.body._csrf || req.headers[process.env.NODE_ENV === 'production' ? "__Host-psifi.x-csrf-token" : "psifi.x-csrf-token"];
   },
 };

@@ -4,6 +4,8 @@ const Product = require("../models/product");
 const handleError = require('../util/handleError');
 const { deleteFile } = require('../util/file');
 
+const ITEMS_PER_PAGE = 4;
+
 exports.getAddProduct = async (req, res) => {
   res.render('admin/edit-product', {
     isEdit: false,
@@ -67,12 +69,23 @@ exports.postAddProduct = async (req, res, next) => {
 exports.getProducts = async (req, res, next) => {
   try {
     // const products = await Product.find({ userId: req.user._id }); // Find products created by current the user.
-    const products = await Product.find();
+    
+    const page = +req.query.page || 1;
+    const totalItems = await Product.countDocuments();
+    
+    const products = await Product.find().skip((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE);
     
     res.render('admin/products-list', {
       pageTitle: 'Admin Products',
       path: '/admin/products',
       products,
+      totalItems,
+      currentPage: page,
+      hasNextPage: page * ITEMS_PER_PAGE < totalItems,
+      nextPage: page + 1,
+      hasPrevPage: (page - 1) > 0,
+      prevPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
     });
   } catch (e) {
     handleError(e, next, 'Error while getting products on admin products list:');
@@ -146,8 +159,8 @@ exports.postEditProduct = async (req, res, next) => {
   }
 };
 
-exports.postDeleteProduct = async (req, res, next) => {
-  const { productId } = req.body;
+exports.deleteProduct = async (req, res, next) => {
+  const { productId } = req.params;
   
   try {
     const deletedProduct = await Product.findByIdAndDelete(productId);
@@ -156,8 +169,8 @@ exports.postDeleteProduct = async (req, res, next) => {
     }
     
     await deleteFile(deletedProduct.imageUrl);
-    res.redirect('/admin/products');
+    res.json({ message: 'Product deleted successfully' });
   } catch (e) {
-    handleError(e, next, `Error while deleting product ${productId}:`);
+    res.json({ message: 'Error while deleting product:' });
   }
 };
