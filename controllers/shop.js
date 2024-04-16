@@ -5,6 +5,7 @@ const PDFDocument = require('pdfkit');
 const Product = require('../models/product');
 const Order = require('../models/order');
 const handleError = require("../util/handleError");
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 // const rootDir = require('../util/path');
 
 const ITEMS_PER_PAGE = 2;
@@ -73,19 +74,25 @@ exports.getProductDetails = async (req, res, next) => {
   }
 };
 
+const getCartItems = async (req) => {
+  const user = await req.user.populate('cart.items.productId');
+  const products = user.cart.items.filter(item => item.productId);
+  
+  // Remove products that are not found in the database
+  const absentProductsIds = user.cart.items
+    .filter(item => !item.productId)
+    .map(product => product._id);
+  
+  if (absentProductsIds.length) {
+    await Promise.all(absentProductsIds.map(productId => req.user.deleteCartItem(productId)));
+  }
+  
+  return products;
+}
+
 exports.getCart = async (req, res, next) => {
   try {
-    const user = await req.user.populate('cart.items.productId');
-    const products = user.cart.items.filter(item => item.productId);
-    
-    // Remove products that are not found in the database
-    const absentProductsIds = user.cart.items
-      .filter(item => !item.productId)
-      .map(product => product._id);
-    
-    if (absentProductsIds.length) {
-      await Promise.all(absentProductsIds.map(productId => req.user.deleteCartItem(productId)));
-    }
+    const products = await getCartItems(req);
     
     res.render('shop/cart', {
       pageTitle: 'Your Cart',
@@ -94,6 +101,42 @@ exports.getCart = async (req, res, next) => {
     });
   } catch (e) {
     handleError(e, next, 'Error while getting Cart or Products in a Cart:');
+  }
+};
+
+exports.getCheckout = async (req, res) => {
+  try {
+    const products = await getCartItems(req);
+    const totalPrice = products.reduce((total, item) => total + item.productId.price * item.quantity, 0);
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: products.map(item => ({
+        quantity: item.quantity,
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.productId.title,
+            description: item.productId.description,
+            images: [`${req.protocol}://${req.get('host')}/${item.productId.imageUrl}`],
+          },
+          unit_amount: item.productId.price * 100,
+        },
+      })),
+      success_url: `${req.protocol}://${req.get('host')}/checkout/success`, // TODO: Add a webhook to handle success payment and prevent user from accessing the page without payment
+      cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel`,
+    });
+    
+    res.render('shop/checkout', {
+      pageTitle: 'Checkout',
+      path: '/checkout',
+      products,
+      totalPrice,
+      sessionId: session.id,
+    });
+  } catch (e) {
+    console.error('Error while getting checkout:', e.message);
   }
 };
 
@@ -120,13 +163,6 @@ exports.postDeleteProductFromCart = async (req, res, next) => {
   }
 };
 
-exports.getCheckout = (req, res) => {
-  res.render('shop/checkout', {
-    pageTitle: 'Checkout',
-    path: '/checkout',
-  });
-};
-
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ 'user.userId': req.user._id });
@@ -141,7 +177,7 @@ exports.getOrders = async (req, res, next) => {
   }
 };
 
-exports.postCreateOrder = async (req, res, next) => {
+exports.getCheckoutSuccess = async (req, res, next) => {
   try {
     const user = await req.user.populate('cart.items.productId');
     const products = user.cart.items.map(item => ({ product: item.productId, quantity: item.quantity }));
@@ -159,7 +195,7 @@ exports.postCreateOrder = async (req, res, next) => {
     await order.save();
     await user.clearCart();
     
-    res.redirect('/cart');
+    res.redirect('/orders');
   } catch (e) {
     handleError(e, next, 'Error while posting an Order:');
   }

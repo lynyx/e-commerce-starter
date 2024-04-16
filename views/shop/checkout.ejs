@@ -1,0 +1,44 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/css/cart.css">
+</head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <main>
+            <ul class="cart__item-list">
+                <% products.forEach(product => { %>
+                    <li class="cart__item">
+                            <h1><%= product.productId.title %></h1>
+                            <h2>Quantity: <%= product.quantity %></h2>
+                            <h2>Price: <%= product.productId.price %> </h2>
+                        </li>
+                <% }) %>
+            </ul>
+
+            <div class="cart__total centered">
+                <h2>Total: <%= totalPrice %> </h2>
+            </div>
+
+            <div class="centered">
+                <button id="order-btn" class="btn mt-50">Payment</button>
+                <!-- Disclaimer of secure payment-->
+                <span class="disclaimer">*Secure payment with Stripe</span>
+                <script src="https://js.stripe.com/v3/" async></script>
+                <script>
+                    const stripe = Stripe('pk_test_51P6AL8DvfLR6tvOt6GFPJOHM2JP9eOhMpd4XegMYITnxQhiMC301GG317Br6MJT4WKLEg8ZrN4blzBRNkP4CQ46S00eUh3OALC');
+
+                    const orderButton = document.getElementById('order-btn');
+                    orderButton.addEventListener('click', async () => {
+                      const result = await stripe.redirectToCheckout({
+                        sessionId: '<%= sessionId %>',
+                      });
+
+                      if (result.error) {
+                        console.error(result.error.message);
+                      }
+                    });
+                </script>
+            </div>
+
+        </main>
+        <%- include('../includes/end.ejs') %>

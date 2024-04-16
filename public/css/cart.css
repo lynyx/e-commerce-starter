@@ -26,3 +26,10 @@
   /*margin: 0;*/
 }
 
+.disclaimer {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 1rem;
+  display: block;
+}
+

@@ -120,7 +120,7 @@ const initializeApp = async () => {
 process.on('SIGINT', async () => {
   try {
     console.log('\nGracefully shutting down. Closing MongoDB connection...');
-    await client.close();
+    await mongoose.disconnect();
     process.exit(0);
   } catch (e) {
     console.error('Error while closing MongoDB connection:', e.message);
@@ -131,7 +131,7 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   try {
     console.log('\nGracefully shutting down. Closing MongoDB connection...');
-    await client.close();
+    await mongoose.disconnect();
     process.exit(0);
   } catch (e) {
     console.error('Error while closing MongoDB connection:', e.message);

@@ -21,10 +21,7 @@
                 </ul>
 
                 <div class="centered">
-                    <form action="/create-order" method="post">
-                        <input type="hidden" name="_csrf" value="<%= csrf %>">
-                        <button class="btn mt-20" type="submit">Order Now!</button>
-                    </form>
+                    <a href="/checkout" class="btn mt-20">Order Now!</a>
                 </div>
             <% } else { %>
                 <h1>No Products in Cart!</h1>

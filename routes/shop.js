@@ -9,7 +9,7 @@ const {
   getProductDetails,
   getProducts,
   postAddToCart,
-  postCreateOrder,
+  getCheckoutSuccess,
   postDeleteProductFromCart,
   getInvoice,
 } = require('../controllers/shop');
@@ -19,12 +19,16 @@ const router = Router();
 router.get('/', getIndex);
 router.get('/products', getProducts);
 router.get('/products/:productId', getProductDetails);
+
 router.get('/cart', requireAuth, getCart);
 router.post('/add-to-cart', requireAuth, postAddToCart);
 router.post('/cart-delete-item', requireAuth, postDeleteProductFromCart);
-router.post('/create-order', requireAuth, postCreateOrder)
+
+router.get('/checkout', requireAuth, getCheckout);
+router.get('/checkout/success', requireAuth, getCheckoutSuccess);
+router.get('/checkout/cancel', requireAuth, getCheckout);
+
 router.get('/orders', requireAuth, getOrders);
 router.get('/orders/:orderId', requireAuth, getInvoice);
-// router.get('/checkout', getCheckout);
 
 module.exports = router;
